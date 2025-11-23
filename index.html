@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doghri MEG Concentration</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            line-height: 1.6;
+            color: #333;
+            background-color: #fff6e5;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* Page header */
+        .page-header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header-icon {
+            width: 50px;
+        }
+
+        .page-title {
+            color: #222222;
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .page-subtitle {
+            color: #936d1c;
+            font-size: 1rem;
+        }
+
+        /* Card styling */
+        .card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        .card-body {
+            padding: 1rem;
+        }
+
+        /* Navigation tabs */
+        .nav-container {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 10px;
+        }
+
+        .nav-btn {
+            background-color: #fff0bf;
+            color: black;
+            border: 2px solid #ddd;
+            padding: 8px 12px;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 80px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .nav-btn:hover {
+            background-color: #e8f1ff;
+            color: #2c5aa0;
+        }
+
+        .nav-btn.active {
+            background-color: #4CAF50;
+            color: #ffffff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .section-container {
+            display: none;
+        }
+
+        .section-container.active {
+            display: block;
+        }
+
+        /* Table styling */
+        .meg-calculator table {
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            width: 100%;
+            font-size: 12px;
+        }
+
+        .meg-calculator th, 
+        .meg-calculator td {
+            border: 1px solid #000000;
+            padding: 3px;
+            text-align: left;
+        }
+
+        .meg-calculator th {
+            background-color: #D9D9D9;
+            font-weight: bold;
+        }
+
+        .meg-calculator input {
+            width: 100%;
+            padding: 3px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            color: #000000;
+        }
+
+        .meg-calculator button {
+            margin: 5px;
+            padding: 8px 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .meg-calculator button:hover {
+            background-color: #45a049;
+        }
+
+        .meg-calculator .result-cell {
+            font-weight: bold;
+        }
+
+        .copy-btn {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .copy-btn:hover {
+            background-color: #0b7dda;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .copy-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* MRU Table Styling */
+        .mru-table tbody tr:nth-child(1) td { 
+            background-color: #fccccc !important;
+        }
+        
+        .mru-table tbody tr:nth-child(2) td { 
+            background-color: #c4eccc !important;
+        }
+        
+        .mru-table tbody tr:nth-child(3) td { 
+            background-color: #fcccac !important;
+        }
+        
+        .mru-table tbody tr:nth-child(4) td { 
+            background-color: #ffffff !important;
+        }
+
+        /* MPS Table Styling */
+        #mps-table tbody tr td { 
+            background-color: #fcccac !important;
+        }
+
+        /* Sealines Table Styling */
+        #sealines-table tbody tr:nth-child(1) td,
+        #sealines-table tbody tr:nth-child(2) td,
+        #sealines-table tbody tr:nth-child(3) td { 
+            background-color: #e6f3ff !important;
+        }
+
+        .copy-row-btn {
+            background-color: #2196F3;
+            font-size: 10px;
+            padding: 3px 6px;
+            margin: 0;
+        }
+
+        .copy-row-btn:hover {
+            background-color: #0b7dda;
+        }
+
+        /* WhatsApp section */
+        .whatsapp-section {
+            margin-top: 15px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+
+        .whatsapp-message {
+            font-family: monospace;
+            white-space: pre-wrap;
+            background-color: #e8f5e9;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            border: 1px solid #c8e6c9;
+            font-size: 0.9rem;
+        }
+
+        .copy-whatsapp-btn {
+            background-color: #25D366;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .copy-whatsapp-btn:hover {
+            background-color: #128C7E;
+        }
+
+        .add-mru-btn {
+            width: 100%;
+            height: 38px;
+            font-size: 1rem;
+        }
+
+        .add-mru-div {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        /* Recent Values Styles */
+        input[data-recent-value] {
+            border-left: 3px solid #4CAF50 !important;
+        }
+
+        input::placeholder {
+            color: #888;
+            font-style: italic;
+            font-size: 0.8em;
+        }
+
+        .recent-values-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #ebdec4;
+            color: #777;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 1.3rem;
+            }
+            
+            .page-subtitle {
+                font-size: 0.9rem;
+            }
+            
+            .header-icon {
+                width: 40px;
+            }
+            
+            .meg-calculator table {
+                font-size: 10px;
+            }
+            
+            .nav-btn {
+                font-size: 0.8rem;
+                padding: 6px 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0.5rem;
+            }
+            
+            .card-body {
+                padding: 0.8rem;
+            }
+            
+            .meg-calculator table {
+                font-size: 9px;
+            }
+            
+            .meg-calculator th, 
+            .meg-calculator td {
+                padding: 2px;
+            }
+            
+            .nav-btn {
+                font-size: 0.7rem;
+                padding: 5px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Page title section -->
+        <div class="page-header">
+            <div class="header-content">
+                <img src="../elements/doghri.png" alt="" class="header-icon">
+                <div class="header-text">
+                    <h1 class="page-title">Doghri MEG Concentration</h1>
+                    <p class="page-subtitle">Calculate MEG concentrations and export to Excel or WhatsApp</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- MEG Calculator Content -->
+        <div class="page-content meg-calculator">
+            <div class="card">
+                <div class="card-body">
+                    <!-- Navigation Buttons -->
+                    <div class="nav-container">
+                        <button id="nav-mru" class="nav-btn active">
+                            <i class="fas fa-industry"></i> MRU
+                        </button>
+                        <button id="nav-mps" class="nav-btn">
+                            <i class="fas fa-tachometer-alt"></i> MPS
+                        </button>
+                        <button id="nav-sealines" class="nav-btn">
+                            <i class="fas fa-water"></i> SeaLines
+                        </button>
+                        <button id="nav-booster" class="nav-btn">
+                          <i class="fas fa-water"></i> Booster MEG
+                        </button>
+                    </div>
+
+                    <!-- MRU Section -->
+                    <div id="mru-section" class="section-container active">
+                        <div id="mru-tables">
+                            <!-- MRU tables will be generated here -->
+                        </div>
+                        <div class="add-mru-div"> 
+                            <button class="add-mru-btn" id="add-mru">
+                                <i class="fa-solid fa-plus"></i> Add MRU
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- MPS Section -->
+                    <div id="mps-section" class="section-container">
+                        <table id="mps-table">
+                            <thead>
+                                <tr>
+                                    <th>Sample Name</th>
+                                    <th>Date</th>
+                                    <th>Appearance</th>
+                                    <th>HC%</th>
+                                    <th>MEG%</th>
+                                    <th>MEG Conc.</th>
+                                    <th>Salinity</th>
+                                    <th>Density</th>
+                                    <th>Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>MP separator Train 1 MEG outlet</td>
+                                    <td class="date-cell"></td>
+                                    <td><input type="text" value="Hazy"></td>
+                                    <td><input type="text" class="hc-input"></td>
+                                    <td class="meg-percent result-cell"></td>
+                                    <td class="meg-conc result-cell"></td>
+                                    <td><input type="number" class="salinity-input"></td>
+                                    <td><input type="number" class="density-input" step="0.0001"></td>
+                                    <td><input type="text" value="Traces of Black sediment"></td>
+                                </tr>
+                                <tr>
+                                    <td>MP separator Train 2 MEG outlet</td>
+                                    <td class="date-cell"></td>
+                                    <td><input type="text" value="Hazy"></td>
+                                    <td><input type="text" class="hc-input"></td>
+                                    <td class="meg-percent result-cell"></td>
+                                    <td class="meg-conc result-cell"></td>
+                                    <td><input type="number" class="salinity-input"></td>
+                                    <td><input type="number" class="density-input" step="0.0001"></td>
+                                    <td><input type="text" value="Traces of Black sediment"></td>
+                                </tr>
+                                <tr>
+                                    <td>MP separator Train 3 MEG outlet</td>
+                                    <td class="date-cell"></td>
+                                    <td><input type="text" value="Hazy"></td>
+                                    <td><input type="text" class="hc-input"></td>
+                                    <td class="meg-percent result-cell"></td>
+                                    <td class="meg-conc result-cell"></td>
+                                    <td><input type="number" class="salinity-input"></td>
+                                    <td><input type="number" class="density-input" step="0.0001"></td>
+                                    <td><input type="text" value="Traces of Black sediment"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <button id="copy-mps" class="copy-btn">
+                            <i class="fas fa-copy"></i> Copy MPS Table
+                        </button>
+                    </div>
+
+                    <!-- Sealines Section -->
+                    <div id="sealines-section" class="section-container">
+                        <table id="sealines-table">
+                            <thead>
+                                <tr>
+                                    <th>Sample Name</th>
+                                    <th>Date</th>
+                                    <th>Appearance</th>
+                                    <th>HC%</th>
+                                    <th>MEG%</th>
+                                    <th>MEG Conc.</th>
+                                    <th>Salinity</th>
+                                    <th>Density</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>14" line - liquid sample point</td>
+                                    <td class="date-cell"></td>
+                                    <td><input type="text" value="Hazy"></td>
+                                    <td><input type="text" class="hc-input"></td>
+                                    <td class="meg-percent result-cell"></td>
+                                    <td class="meg-conc result-cell"></td>
+                                    <td><input type="number" class="salinity-input"></td>
+                                    <td><input type="number" class="density-input" step="0.0001"></td>
+                                    <td><button class="copy-row-btn">Copy Row</button></td>
+                                </tr>
+                                <tr>
+                                    <td>26" line - liquid sample point</td>
+                                    <td class="date-cell"></td>
+                                    <td><input type="text" value="Hazy"></td>
+                                    <td><input type="text" class="hc-input"></td>
+                                    <td class="meg-percent result-cell"></td>
+                                    <td class="meg-conc result-cell"></td>
+                                    <td><input type="number" class="salinity-input"></td>
+                                    <td><input type="number" class="density-input" step="0.0001"></td>
+                                    <td><button class="copy-row-btn">Copy Row</button></td>
+                                </tr>
+                                <tr>
+                                    <td>Old 30" line - liquid sample point</td>
+                                    <td class="date-cell"></td>
+                                    <td><input type="text" value="Hazy"></td>
+                                    <td><input type="text" class="hc-input"></td>
+                                    <td class="meg-percent result-cell"></td>
+                                    <td class="meg-conc result-cell"></td>
+                                    <td><input type="number" class="salinity-input"></td>
+                                    <td><input type="number" class="density-input" step="0.0001"></td>
+                                    <td><button class="copy-row-btn">Copy Row</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <button id="copy-sealines" class="copy-btn">
+                            <i class="fas fa-copy"></i> Copy Sealines Table
+                        </button>
+                    </div>
+
+                    <!-- Booster MEG Section -->
+                    <div id="booster-section" class="section-container">
+                        <table id="booster-table">
+                            <thead>
+                                <tr>
+                                    <th>Sample Location</th>
+                                    <th>Date</th>
+                                    <th>MEG Conc.</th>
+                                    <th>Salinity</th>
+                                    <th>Density</th>
+                                    <th>Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Discharge booster pump</td>
+                                    <td class="date-cell"></td>
+                                    <td class="meg-conc result-cell"></td>
+                                    <td><input type="number" class="salinity-input"></td>
+                                    <td><input type="number" class="density-input" step="0.0001"></td>
+                                    <td>Collected by production</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <button id="copy-booster" class="copy-btn">
+                            <i class="fas fa-copy"></i> Copy Booster Table
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Created by Abdelrhman A. Eliwa</p>
+        </footer>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyC-NULo0E1WB-9DPRLQlfvlKlmoG9beAhQ",
+            authDomain: "notifications-d1187.firebaseapp.com",
+            databaseURL: "https://notifications-d1187-default-rtdb.firebaseio.com",
+            projectId: "notifications-d1187",
+            storageBucket: "notifications-d1187.firebasestorage.app",
+            messagingSenderId: "237025997774",
+            appId: "1:237025997774:web:834bebf387ffbdf76cb19f"
+        };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        // Set date and time for all date cells
+        function setDateTime() {
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            let period = "AM";
+            let formattedHours = hours;
+            let timeString = "";
+
+            // Convert to 12-hour format and determine AM/PM
+            if (hours >= 12) {
+                period = "PM";
+                formattedHours = hours > 12 ? hours - 12 : hours;
+            } else {
+                period = "AM";
+                formattedHours = hours === 0 ? 12 : hours;
+            }
+
+            // Determine which time slot we're in and set fixed time values
+            if ((hours >= 7 && hours < 14) || (hours == 14 && minutes == 0)) {
+                formattedHours = 9;
+                minutes = 0; // Set minutes to 0 for fixed time
+                period = "AM";
+            } else if ((hours >= 14 && hours < 19) || (hours == 19 && minutes == 0)) {
+                formattedHours = 5;
+                minutes = 0; // Set minutes to 0 for fixed time
+                period = "PM";
+            } else if ((hours >= 19 || hours < 2) || (hours == 2 && minutes == 0)) {
+                formattedHours = 9;
+                minutes = 0; // Set minutes to 0 for fixed time
+                period = "PM";
+            } else {
+                formattedHours = 5;
+                minutes = 0; // Set minutes to 0 for fixed time
+                period = "AM";
+            }
+
+            // Format date as MM/DD/YYYY (Excel-friendly format)
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            
+            // Format time as HH:MM with leading zeros and AM/PM
+            const formattedMinutes = String(minutes).padStart(2, '0');
+            
+            // Create Excel-compatible format: "MM/DD/YYYY HH:MM AM/PM"
+            const dateTime = `${month}/${day}/${year} ${formattedHours}:${formattedMinutes} ${period}`;
+
+            // Store the formatted date in a data attribute
+            document.querySelectorAll('.date-cell').forEach(cell => {
+                cell.textContent = dateTime;
+                // Store as Excel formula to force text format
+                cell.setAttribute('data-excel-date', dateTime);
+            });
+        }
+        
+        // --- Constants (match Excel) ---
+        const MW_MEG = 62.07, MW_H2O = 18;
+        const RHO_MEG = 1.114, RHO_W = 0.9981;
+        const d = 0.111916, e = 0.214501;
+        const s1 = 0.040247, s2 = -0.001214, s3 = -0.005082;
+
+        function roundExcel(n, dp) {
+            const f = 10 ** dp;
+            const x = Math.abs(n) * f + Number.EPSILON;
+            const r = Math.round(x);
+            return (n < 0 ? -r : r) / f;
+        }
+
+        function moleFracFromVPercent(v) {
+            const vw = 100 - v;
+            const mMEG = v * RHO_MEG;
+            const mW   = vw * RHO_W;
+            const nMEG = mMEG / MW_MEG;
+            const nW   = mW   / MW_H2O;
+            const xMEG = nMEG / (nMEG + nW);
+            return xMEG;
+        }
+
+        function rho0(x) {
+            const xW = 1 - x;
+            return x * RHO_MEG + xW * RHO_W + d * x * xW + e * x * (xW ** 3);
+        }
+
+        function expPoint(v, m) {
+            const x = moleFracFromVPercent(v);
+            const rho0Val = rho0(x);
+            const rho = rho0Val + (s1 + s3 * Math.sqrt(x)) * m + s2 * m * m;
+            // Display precision like Excel (9 d.p.)
+            return { 
+                exp: roundExcel(rho, 9), 
+                x: roundExcel(x, 9), 
+                rho0: roundExcel(rho0Val, 9) 
+            };
+        }
+
+        function buildExpTable(m) {
+            const rows = [];
+            for (let i = 0; i <= 200; i++) {          // 100, 99.5, ..., 0
+                const v = 100 - i * 0.5;
+                const { exp } = expPoint(v, m);
+                rows.push({ v, expRaw: exp });          // use expRaw for matching
+            }
+            // already DESC by construction; keep as-is
+            return rows;
+        }
+
+        function matchExcelDesc(lookup, arr) {
+            // arr is DESC by expRaw; return index of smallest value >= lookup
+            if (lookup > arr[0].expRaw) return -1;
+            let lo = 0, hi = arr.length - 1;
+            while (lo <= hi) {
+                const mid = (lo + hi) >> 1;
+                if (arr[mid].expRaw >= lookup) lo = mid + 1;
+                else hi = mid - 1;
+            }
+            return hi; // 0-based
+        }
+
+        function calculateMEG(salinity, density, tuningFactor = 0.675) {
+            if (!isFinite(density)) return { vPercent: null, wtPercent: null, wtPercentRaw: null };
+            const m = ((+salinity || 0) * tuningFactor) / 1000 / 40;
+            const lookup = roundExcel(+density, 5);       // like ROUND(V37,5)
+            const table = buildExpTable(m);
+            const idx = matchExcelDesc(lookup, table);
+            if (idx < 0) return { vPercent: null, wtPercent: null, wtPercentRaw: null };
+
+            const v = table[idx].v;
+            const wt = ((v * RHO_MEG) / (v * RHO_MEG + (100 - v) * RHO_W)) * 100;
+            return { 
+                vPercent: +v.toFixed(2),           // ← Rounds to 0 decimals (whole numbers)
+                wtPercent: +wt.toFixed(2),         // ← Rounds to 1 decimal  
+                wtPercentRaw: +wt.toFixed(3)       // ← Rounds to 3 decimals
+            };
+        }
+
+        function setupInputListeners() {
+            // Debounce helper for smooth typing
+            const debounce = (fn, delay = 300) => {
+                let timer;
+                return (...args) => {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => fn(...args), delay);
+                };
+            };
+
+            // Main row recalculation
+            function recalcRow(row) {
+                const salinityInput = row.querySelector('.salinity-input');
+                const densityInput  = row.querySelector('.density-input');
+
+                const salinity = salinityInput ? salinityInput.value.trim() : '';
+                const density  = densityInput ? densityInput.value.trim() : '';
+
+                if (!density || isNaN(parseFloat(density))) return;
+
+                const result = calculateMEG(parseFloat(salinity || 0), parseFloat(density));
+                if (!result) return;
+
+                const sampleName = (row.cells[0]?.textContent || "").toLowerCase();
+                let concValue = '';
+                let targetCell = null;
+
+                // Assign concentration based on sample type
+                if (sampleName.includes("rich meg")) {
+                    // Rich MEG → volume%
+                    concValue = result.vPercent.toFixed(2);
+                    targetCell = row.querySelector('.rich-conc');
+                } 
+                else if (sampleName.includes("lean meg")) {
+                    // Lean MEG → volume%
+                    concValue = result.vPercent.toFixed(2);
+                    targetCell = row.querySelector('.lean-conc');
+                } 
+                else if (sampleName.includes("produced water")) {
+                    // Produced water → weight%, 3 decimals
+                    concValue = result.wtPercentRaw.toFixed(3);
+                    targetCell = row.querySelector('.lean-conc'); // display under Lean Conc column
+                } 
+                else {
+                    // Reclaimer or others → MEG Conc column
+                    concValue = result.vPercent.toFixed(2);
+                    targetCell = row.querySelector('.meg-conc');
+                }
+
+                if (targetCell) targetCell.textContent = concValue;
+
+                // Trigger WhatsApp refresh after typing pause
+                const table = row.closest('table');
+                if (table && table._updateMessageDebounced) table._updateMessageDebounced();
+            }
+
+            // Unified input listener (salinity, density, HC)
+            document.addEventListener('input', debounce((e) => {
+                const t = e.target;
+                if (!t.matches('.salinity-input, .density-input, .hc-input')) return;
+
+                const row = t.closest('tr');
+                if (!row) return;
+
+                // Instant HC → MEG conversion
+                if (t.classList.contains('hc-input')) {
+                    const val = t.value.trim();
+                    let meg = 0;
+                    if (isNaN(parseFloat(val)) && val) meg = 100;
+                    else if (val) meg = Math.max(0, Math.min(100, 100 - parseFloat(val)));
+                    const cell = row.querySelector('.meg-percent');
+                    if (cell) cell.textContent = meg.toFixed(1);
+                }
+
+                recalcRow(row);
+            }, 250));
+        }
+
+        // Copy table content as TSV (tab-separated values)
+        function copyTableToClipboard(tableId, buttonId) {
+            const button = document.getElementById(buttonId);
+            const table = document.getElementById(tableId);
+
+            button.addEventListener('click', function() {
+                let tsvContent = "";
+                
+                // Process each row
+                const rows = table.querySelectorAll('tbody tr');
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    const rowData = [];
+                    
+                    cells.forEach(cell => {
+                        if (cell.classList.contains('date-cell')) {
+                            // Use the stored date format
+                            rowData.push(cell.getAttribute('data-excel-date') || cell.textContent);
+                        } else if (cell.querySelector('input')) {
+                            // Get input value
+                            const input = cell.querySelector('input');
+                            rowData.push(input.value);
+                        } else if (cell.querySelector('button')) {
+                            // Skip buttons
+                            rowData.push('');
+                        } else {
+                            // Regular cell content
+                            rowData.push(cell.textContent);
+                        }
+                    });
+                    
+                    tsvContent += rowData.join('\t') + '\r\n';
+                });
+                
+                // Copy to clipboard
+                navigator.clipboard.writeText(tsvContent)
+                    .then(() => {
+                        button.textContent = 'Copied!';
+                        setTimeout(() => {
+                            button.textContent = buttonId === 'copy-mps' ? 'Copy MPS Table' : 'Copy Sealines Table';
+                        }, 2000);
+                    })
+                    .catch(err => {
+                        console.error('Unable to copy table', err);
+                    });
+            });
+        }
+
+        // Generate MRU tables (only MRU 3 and 4 by default)
+        function generateMRUTables(start = 3, end = 4, append = false) {
+            const mruContainer = document.getElementById('mru-tables');
+
+            // Only clear the container if we're not appending
+            if (!append) {
+                mruContainer.innerHTML = '';
+            }
+
+            for (let i = start; i <= end; i++) {
+                const mruTable = document.createElement('table');
+                mruTable.className = 'mru-table';
+                mruTable.innerHTML = `
+                    <thead>
+                        <tr><th colspan="10">MRU ${i}</th></tr>
+                        <tr>
+                            <th>Sample name</th><th>Date</th><th>pH</th><th>Temperature</th><th>Apearance</th>
+                            <th>Lean Conc</th><th>Rich Conc</th><th>Salinity</th><th>Density</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Rich MEG (MRU Inlet)</td><td class="date-cell"></td>
+                            <td><input type="text"></td><td><input type="text"></td>
+                            <td><input type="text" value="Hazy with thin HC layer"></td>
+                            <td class="lean-conc result-cell"></td><td class="rich-conc result-cell"></td>
+                            <td><input type="number" class="salinity-input"></td>
+                            <td><input type="number" class="density-input" step="0.0001"></td>
+                        </tr>
+                        <tr>
+                            <td>Lean MEG (MRU Outlet)</td><td class="date-cell"></td>
+                            <td><input type="text"></td><td><input type="text"></td>
+                            <td><input type="text" value="Hazy"></td>
+                            <td class="lean-conc result-cell"></td><td class="rich-conc result-cell"></td>
+                            <td><input type="number" class="salinity-input"></td>
+                            <td><input type="number" class="density-input" step="0.0001"></td>
+                        </tr>
+                        <tr>
+                            <td>Reclaimer</td><td class="date-cell"></td>
+                            <td><input type="text"></td><td><input type="text"></td>
+                            <td><input type="text" value="Brown"></td>
+                            <td class="lean-conc result-cell"></td><td class="rich-conc result-cell"></td>
+                            <td><input type="number" class="salinity-input"></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>Produced water</td><td class="date-cell"></td>
+                            <td></td><td></td><td><input type="text" value="Hazy"></td>
+                            <td class="lean-conc result-cell"></td><td class="rich-conc result-cell"></td>
+                            <td><input type="number" class="salinity-input"></td>
+                            <td><input type="number" class="density-input" step="0.0001"></td>
+                        </tr>
+                    </tbody>
+                `;
+
+                // --- Copy TSV Button ---
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'copy-btn';
+                copyBtn.innerHTML = `<i class="fas fa-copy"></i> Copy MRU ${i}`;
+                copyBtn.addEventListener('click', () => {
+                    let tsvContent = '';
+                    const rows = mruTable.querySelectorAll('tbody tr');
+                    rows.forEach(row => {
+                        const cells = row.querySelectorAll('td');
+                        const rowData = [];
+                        cells.forEach(cell => {
+                            if (cell.classList.contains('date-cell')) {
+                                rowData.push(cell.getAttribute('data-excel-date') || cell.textContent);
+                            } else if (cell.querySelector('input')) {
+                                rowData.push(cell.querySelector('input').value);
+                            } else if (cell.querySelector('button')) {
+                                rowData.push('');
+                            } else {
+                                rowData.push(cell.textContent);
+                            }
+                        });
+                        tsvContent += rowData.join('\t') + '\r\n';
+                    });
+                    navigator.clipboard.writeText(tsvContent).then(() => {
+                        const original = copyBtn.innerHTML;
+                        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                        setTimeout(() => (copyBtn.innerHTML = original), 2000);
+                    });
+                });
+
+                // --- WhatsApp Message Section ---
+                const whatsappSection = createWhatsAppSection(
+                    mruTable,
+                    generateMRUWhatsAppMessage,
+                    'mru'
+                );
+
+                // Append all elements
+                mruContainer.appendChild(mruTable);
+                mruContainer.appendChild(copyBtn);
+                mruContainer.appendChild(whatsappSection);
+
+                // Set current date/time in the MRU table
+                setDateTime();
+            }
+        }
+
+        // Check if row has data (excluding specific fields with default values)
+        function rowHasData(row, tableType) {
+            const inputs = row.querySelectorAll('input');
+            return Array.from(inputs).some(input => {
+                const value = input.value.trim();
+                
+                // Skip if empty
+                if (!value) return false;
+                
+                // Skip specific fields based on table type
+                switch(tableType) {
+                    case 'mru':
+                        // Skip Appearance field in MRU (column index 4)
+                        if (row.cells[4] && row.cells[4].contains(input)) {
+                            return false;
+                        }
+                        break;
+                        
+                    case 'mps':
+                        // Skip Appearance (column index 2), Remarks (column index 8), and any text HC values in MPS
+                        if ((row.cells[2] && row.cells[2].contains(input)) || 
+                            (row.cells[8] && row.cells[8].contains(input)) ||
+                            (input.classList.contains('hc-input') && isNaN(parseFloat(value)) && value !== "")) {
+                            return false;
+                        }
+                        break;
+                        
+                    case 'sealines':
+                        // Skip Appearance field in Sealines (column index 2) and any text HC values
+                        if ((row.cells[2] && row.cells[2].contains(input)) ||
+                            (input.classList.contains('hc-input') && isNaN(parseFloat(value)) && value !== "")) {
+                            return false;
+                        }
+                        break;
+                        
+                    case 'booster':
+                        // Skip "Collected by production" field (column index 5) in Booster table
+                        if (row.cells[5] && row.cells[5].contains(input)) {
+                            return false;
+                        }
+                        break;
+                }
+                
+                return true;
+            });
+        }
+
+        // Helper function to get cell value from a row
+        function getCellValue(row, index) {
+            const cell = row.cells[index];
+            if (!cell) return '';
+            
+            if (cell.querySelector('input')) {
+                return cell.querySelector('input').value || '';
+            }
+            
+            return cell.textContent.trim();
+        }
+
+        // Generate WhatsApp message for MRU table
+        function generateMRUWhatsAppMessage(table) {
+            const rows = table.querySelectorAll('tbody tr');
+            if (rows.length < 4) return '';
+
+            // Get rows for each type
+            const inletRow = rows[0];      // Rich MEG (MRU Inlet)
+            const outletRow = rows[1];     // Lean MEG (MRU Outlet)
+            const reclaimerRow = rows[2];  // Reclaimer
+            const producedRow = rows[3];   // Produced Water
+
+            const displayName = table.querySelector('th').textContent;
+
+            let message = `_*${displayName}*_\t\n\n`;
+            let hasData = false;
+
+            const fmt = (val, unit = '') => {
+                if (val === undefined || val === null || val === '') return 'N/A';
+                // Do NOT round salinity or density – show exactly as input
+                if (unit.includes('ppm') || unit.includes('g/cm')) return `${val}${unit}`;
+                const num = parseFloat(val);
+                return isNaN(num) ? `${val}${unit}` : `${num.toFixed(2)}${unit}`;
+            };
+
+            // Inlet
+            if (rowHasData(inletRow, 'mru')) {
+                hasData = true;
+                message += "_*Inlet*_\t\n";
+                message += `_App.\t         ${getCellValue(inletRow, 4)}_\n`;
+                message += `_pH\t             ${fmt(getCellValue(inletRow, 2))} @ ${fmt(getCellValue(inletRow, 3))}°C_\n`;
+                message += `_Conc.\t       ${fmt(getCellValue(inletRow, 6), '%')}_\n`;
+                message += `_Salinity\t    ${fmt(getCellValue(inletRow, 7), ' ppm')}_\n`;
+                message += `_Density\t    ${fmt(getCellValue(inletRow, 8), ' g/cm³')}_\n`;
+                message += "\u00A0\u00A0\n\n";
+            }
+
+            // Outlet
+            if (rowHasData(outletRow, 'mru')) {
+                hasData = true;
+                message += "_*Outlet*_\t\n";
+                message += `_App.\t         ${getCellValue(outletRow, 4)}_\n`;
+                message += `_pH\t             ${fmt(getCellValue(outletRow, 2))} @ ${fmt(getCellValue(outletRow, 3))}°C_\n`;
+                message += `_Conc.\t       ${fmt(getCellValue(outletRow, 5), '%')}_\n`;
+                message += `_Salinity\t    ${fmt(getCellValue(outletRow, 7), ' ppm')}_\n`;
+                message += `_Density\t    ${fmt(getCellValue(outletRow, 8), ' g/cm³')}_\n`;
+                message += "\u00A0\u00A0\n\n";
+            }
+
+            // Reclaimer
+            if (rowHasData(reclaimerRow, 'mru')) {
+                hasData = true;
+                message += "_*Reclaimer*_\t\n";
+                message += `_App.\t         ${getCellValue(reclaimerRow, 4)}_\n`;
+                message += `_pH\t             ${fmt(getCellValue(reclaimerRow, 2))} @ ${fmt(getCellValue(reclaimerRow, 3))}°C_\n`;
+                message += `_Salinity\t    ${fmt(getCellValue(reclaimerRow, 7), ' ppm')}_\n`;
+                message += "\u00A0\u00A0\n\n";
+            }
+
+            // Produced Water
+            if (rowHasData(producedRow, 'mru')) {
+                hasData = true;
+                message += "_*Produced Water*_\t\n";
+                message += `_App.\t         ${getCellValue(producedRow, 4)}_\n`;
+                message += `_MEG Conc.\t     ${fmt(getCellValue(producedRow, 5), '%')}_\n`;
+                message += `_Salinity\t    ${fmt(getCellValue(producedRow, 7), ' ppm')}_\n`;
+                message += `_Density\t    ${fmt(getCellValue(producedRow, 8), ' g/cm³')}_\n`;
+            }
+
+            return hasData ? message : "No data available for this MRU";
+        }
+
+        // Generate WhatsApp message for MPS table
+        function generateMPSWhatsAppMessage(table) {
+            const rows = table.querySelectorAll('tbody tr');
+            let message = "";
+            let hasData = false;
+
+            // Process each train
+            rows.forEach((row, index) => {
+                if (!rowHasData(row, 'mps')) return;
+                
+                hasData = true;
+                const trainNum = index + 1;
+                
+                message += `_*Medium pressure Separator Liquid Train (${trainNum})*_\t\n`;
+
+                // Determine composition text
+                const megPercent = getCellValue(row, 4);
+                const hcValue = getCellValue(row, 3);
+                
+                // Check if HC value is text or number
+                if (isNaN(parseFloat(hcValue)) && hcValue !== "") {
+                    // It's text, use the text directly
+                    message += `_${megPercent}% MEG with ${hcValue} and traces of black sediments_\n`;
+                } else if (megPercent == 100) {
+                    message += `_${megPercent}% MEG with thin layer of HC and traces of black sediments_\n`;
+                } else {
+                    message += `_${megPercent}% MEG + ${hcValue}% HC with traces of black sediments_\n`;
+                }
+
+                // Add metrics
+                message += `_*MEG Conc*\t          ${getCellValue(row, 5)}%_\n`;
+                message += `_*MEG Salinity*\t  ${getCellValue(row, 6)} ppm_\n`;
+                message += `_*Density*\t          ${getCellValue(row, 7)} g/cm3_\n`;
+
+                // Add spacing between trains (except after last one)
+                if (index < rows.length - 1) {
+                    message += `\u00A0\u00A0\n\n`;
+                }
+            });
+
+            return hasData ? message : "No data available for MPS";
+        }
+
+        // Generate WhatsApp message for Sealines table
+        function generateSealinesWhatsAppMessage(table) {
+            const rows = table.querySelectorAll('tbody tr');
+            let message = "";
+            let hasData = false;
+
+            // Process each sealine
+            rows.forEach((row, index) => {
+                if (!rowHasData(row, 'sealines')) return;
+                
+                hasData = true;
+                const lineName = getCellValue(row, 0).split(' - ')[0];
+                
+                message += `_*${lineName} liquid sample point*_\t\n`;
+
+                // Determine composition text
+                const megPercent = getCellValue(row, 4);
+                const hcValue = getCellValue(row, 3);
+                
+                // Check if HC value is text or number
+                if (isNaN(parseFloat(hcValue)) && hcValue !== "") {
+                    // It's text, use the text directly
+                    message += `_${megPercent}% MEG with ${hcValue} and traces of black sediments_\n`;
+                } else if (megPercent == 100) {
+                    message += `_${megPercent}% MEG with thin layer of HC and traces of black sediments_\n`;
+                } else {
+                    message += `_${megPercent}% MEG + ${hcValue}% HC with traces of black sediments_\n`;
+                }
+
+                // Add metrics
+                message += `_*MEG Conc*\t             ${getCellValue(row, 5)}%_\n`;
+                message += `_*MEG Salinity*\t     ${getCellValue(row, 6)} ppm_\n`;
+                message += `_*Density*\t             ${getCellValue(row, 7)} g/cm3_\n`;
+
+                // Add spacing between lines (except after last one)
+                if (index < rows.length - 1) {
+                    message += `\u00A0\u00A0\n\n`;
+                }
+            });
+
+            return hasData ? message : "No data available for Sealines";
+        }
+
+        // Generate WhatsApp message for Booster table
+        function generateBoosterWhatsAppMessage(table) {
+            const rows = table.querySelectorAll('tbody tr');
+            if (rows.length === 0) return "No data available for Booster MEG";
+            
+            const row = rows[0];
+            if (!rowHasData(row, 'booster')) return "No data available for Booster MEG";
+            
+            let boosterMessage = `_*Lean MEG booster pump*_\n`;
+            boosterMessage += `_*App.*        Clear_\n`;
+            boosterMessage += `_*Conc.*      ${getCellValue(row, 2)}%_\n`;
+            boosterMessage += `_*Salinity*   ${getCellValue(row, 3)} ppm_\n`;
+            
+            return boosterMessage;
+        }
+
+        function createWhatsAppSection(table, generateMessageFunction, tableType) {
+            const section = document.createElement('div');
+            section.className = 'whatsapp-section';
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'whatsapp-message';
+
+            const copyButton = document.createElement('button');
+            copyButton.className = 'copy-whatsapp-btn';
+            copyButton.textContent = 'Copy WhatsApp Message';
+
+            const updateMessage = () => {
+                const msg = generateMessageFunction(table);
+                messageDiv.textContent = msg;
+                copyButton.style.display = msg.includes('No data available') ? 'none' : 'block';
+            };
+
+            // Debounce WhatsApp refresh (waits 1 s after last change)
+            table._updateMessageDebounced = (() => {
+                let timer;
+                return () => {
+                    clearTimeout(timer);
+                    timer = setTimeout(updateMessage, 1000);
+                };
+            })();
+
+            updateMessage();
+
+            copyButton.addEventListener('click', () => {
+                navigator.clipboard.writeText(messageDiv.textContent).then(() => {
+                    copyButton.textContent = 'Copied!';
+                    setTimeout(() => (copyButton.textContent = 'Copy WhatsApp Message'), 2000);
+                });
+            });
+
+            section.appendChild(messageDiv);
+            section.appendChild(copyButton);
+            return section;
+        }
+
+        // Update the setupNavigation function to include Booster tab
+        function setupNavigation() {
+            document.getElementById('nav-mru').addEventListener('click', function() {
+                document.querySelectorAll('.section-container').forEach(sec => sec.classList.remove('active'));
+                document.getElementById('mru-section').classList.add('active');
+                document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+            });
+
+            document.getElementById('nav-mps').addEventListener('click', function() {
+                document.querySelectorAll('.section-container').forEach(sec => sec.classList.remove('active'));
+                document.getElementById('mps-section').classList.add('active');
+                document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+            });
+
+            document.getElementById('nav-sealines').addEventListener('click', function() {
+                document.querySelectorAll('.section-container').forEach(sec => sec.classList.remove('active'));
+                document.getElementById('sealines-section').classList.add('active');
+                document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+            });
+
+            // Add Booster navigation
+            document.getElementById('nav-booster').addEventListener('click', function() {
+                document.querySelectorAll('.section-container').forEach(sec => sec.classList.remove('active'));
+                document.getElementById('booster-section').classList.add('active');
+                document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+            });
+        }
+
+        // Setup row copy buttons for Sealines
+        function setupSealinesRowCopyButtons() {
+            document.querySelectorAll('#sealines-table tbody tr').forEach((row, index) => {
+                // Remove any existing copy button
+                const existingBtn = row.querySelector('.copy-row-btn');
+                if (existingBtn) {
+                    existingBtn.remove();
+                }
+                
+                // Create new copy button
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'copy-row-btn';
+                copyBtn.textContent = 'Copy Row';
+                
+                // Add click event
+                copyBtn.addEventListener('click', function() {
+                    const cells = row.querySelectorAll('td');
+                    const rowData = [];
+                    
+                    cells.forEach(cell => {
+                        if (cell.classList.contains('date-cell')) {
+                            rowData.push(cell.getAttribute('data-excel-date') || cell.textContent);
+                        } else if (cell.querySelector('input')) {
+                            const input = cell.querySelector('input');
+                            rowData.push(input.value);
+                        } else if (cell.querySelector('button')) {
+                            // Skip buttons
+                            rowData.push('');
+                        } else {
+                            rowData.push(cell.textContent);
+                        }
+                    });
+                    
+                    // Remove the button cell from data
+                    rowData.pop();
+                    
+                    const tsvContent = rowData.join('\t');
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(tsvContent)
+                        .then(() => {
+                            const originalText = copyBtn.textContent;
+                            copyBtn.textContent = 'Copied!';
+                            setTimeout(() => {
+                                copyBtn.textContent = originalText;
+                            }, 2000);
+                        })
+                        .catch(err => {
+                            console.error('Failed to copy row: ', err);
+                        });
+                });
+                
+                // Add button to the last cell
+                const lastCell = row.cells[row.cells.length - 1];
+                lastCell.appendChild(copyBtn);
+            });
+        }
+
+        // Initialize the application
+        function init() {
+            console.log('Initializing MEG Calculator...');
+
+            // Set datetime for all tables
+            setDateTime();
+
+            // Generate default MRUs
+            generateMRUTables(3, 4);
+
+            // Set up single global debounced listener
+            setupInputListeners();
+
+            // Add WhatsApp sections for other tables
+            const mpsTable = document.getElementById('mps-table');
+            const sealinesTable = document.getElementById('sealines-table');
+            const boosterTable = document.getElementById('booster-table');
+
+            const mpsWhatsapp = createWhatsAppSection(mpsTable, generateMPSWhatsAppMessage, 'mps');
+            const sealinesWhatsapp = createWhatsAppSection(sealinesTable, generateSealinesWhatsAppMessage, 'sealines');
+            const boosterWhatsapp = createWhatsAppSection(boosterTable, generateBoosterWhatsAppMessage, 'booster');
+
+            document.getElementById('copy-mps').after(mpsWhatsapp);
+            document.getElementById('copy-sealines').after(sealinesWhatsapp);
+            document.getElementById('copy-booster').after(boosterWhatsapp);
+
+            // Copy-to-clipboard features
+            copyTableToClipboard('mps-table', 'copy-mps');
+            copyTableToClipboard('sealines-table', 'copy-sealines');
+            copyTableToClipboard('booster-table', 'copy-booster');
+
+            // Other utilities
+            setupSealinesRowCopyButtons();
+            setupNavigation();
+
+            // Add MRU dynamically
+            let mruCount = 4;
+            document.getElementById('add-mru').addEventListener('click', () => {
+                mruCount++;
+                generateMRUTables(mruCount, mruCount, true);
+                setDateTime();
+            });
+        }
+
+        // Run initialization when page loads
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
